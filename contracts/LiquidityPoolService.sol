@@ -18,12 +18,21 @@ contract LiquidityPoolService {
         initialisePair();
     }
 
+    function initialisePair() private {
+        factory = IUniswapV2Factory(FACTORY);
+        factory.createPair(tokenA, tokenB);
+    }
+
     function getReserves() public view returns(uint reserveA, uint reserveB) {
         (reserveA, reserveB) = UniswapV2Library.getReserves(FACTORY, tokenA, tokenB);
     }
 
-    function initialisePair() private {
-        factory = IUniswapV2Factory(FACTORY);
-        factory.createPair(tokenA, tokenB);
+    function quote(address _token, uint _amount) public view returns(uint amount) {
+        (uint reserveA, uint reserveB) = getReserves();
+        if (_token == tokenA) {
+            amount = UniswapV2Library.quote(_amount, reserveA, reserveB);
+        } else {
+            amount = UniswapV2Library.quote(_amount, reserveB, reserveA);
+        }
     }
 }

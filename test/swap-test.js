@@ -23,13 +23,21 @@ describe('LiquidityPoolService', async () => {
     expect(reserves.reserveB.toString()).to.equal("0");
   });
 
-  // it('initialises prices as identical', async () => {
-  //   const quoteA = await service.quote(ewan, 50000);
-  //   const quoteB = await service.quote(sheldon, 100000);
+  it('will not provide a quote when no liquidity', async () => {
+    try {
+      await service.quote(ewan.address, 50000);
+      throw new Error();
+    } catch (error) {
+      expect(error.message).contains("INSUFFICIENT_LIQUIDITY");
+    }
 
-  //   expect(quoteA.toString()).to.equal("50000");
-  //   expect(quoteB.toString()).to.equal("100000");
-  // });
+    try {
+      await service.quote(sheldon.address, 100000);
+      throw new Error();
+    } catch (error) {
+      expect(error.message).contains("INSUFFICIENT_LIQUIDITY");
+    }
+  });
 
   // it('allows you to add liquidity', async () => {
 
