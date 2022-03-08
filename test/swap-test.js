@@ -1,31 +1,40 @@
-const chai = require('chai');
+const { expect } = require('chai');
 const Web3 = require('web3');
 
 describe('LiquidityPoolService', async () => {
-  it('gets the pool information for the given tokens', async () => {
+  let service, ewan, sheldon;
+
+  before(async () =>{
     const EwanToken = await ethers.getContractFactory("EwanToken");
     const SheldonToken = await ethers.getContractFactory("SheldonToken");
     const LiquidityPoolService = await ethers.getContractFactory("LiquidityPoolService");
-    const ewan = await EwanToken.deploy("Ewan", "EWA");
-    const sheldon = await SheldonToken.deploy("Sheldon", "EWA");
-    const service = await LiquidityPoolService.deploy(ewan.address, sheldon.address);
+    ewan = await EwanToken.deploy("Ewan", "EWA");
+    sheldon = await SheldonToken.deploy("Sheldon", "EWA");
+    service = await LiquidityPoolService.deploy(ewan.address, sheldon.address);
     await ewan.deployed();
     await sheldon.deployed();
     await service.deployed();
-    const pair = await service.getPair();
-    const reserves = await service.getReserves();
-    console.log(reserves.reserveA.toString())
-    console.log(reserves.reserveB.toString())
-
-
-
-
-
-    // const DAI = '0x6b175474e89094c44da98b954eedeac495271d0f';
-    // const DAI_WHALE = '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0';
-    // const dai = await ethers.getContractAt("IERC20", DAI);
-    // const daiWhaleBalance = await dai.balanceOf(DAI_WHALE);
-    // console.log(daiWhaleBalance.toString());
-    // const dai = await IERC20.at(DAI);
   });
+
+  it('initialises the pool with no liquidity', async () => {
+    const reserves = await service.getReserves();
+
+    expect(reserves.reserveA.toString()).to.equal("0");
+    expect(reserves.reserveB.toString()).to.equal("0");
+  });
+
+  // it('initialises prices as identical', async () => {
+  //   const quoteA = await service.quote(ewan, 50000);
+  //   const quoteB = await service.quote(sheldon, 100000);
+
+  //   expect(quoteA.toString()).to.equal("50000");
+  //   expect(quoteB.toString()).to.equal("100000");
+  // });
+
+  // it('allows you to add liquidity', async () => {
+
+  //   await service.addLiquidity(
+  //     desiredA, desiredB, minA, minB, provider, nowPlusMinute
+  //   )
+  // });
 });

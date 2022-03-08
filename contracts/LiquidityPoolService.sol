@@ -15,15 +15,15 @@ contract LiquidityPoolService {
     constructor(address _tokenA, address _tokenB) public {
         tokenA = _tokenA;
         tokenB = _tokenB;
-        factory = IUniswapV2Factory(FACTORY);
-        factory.createPair(tokenA, tokenB);
-    }
-
-    function getPair() public view returns(IUniswapV2Pair) {
-        return IUniswapV2Pair(factory.getPair(tokenA, tokenB));
+        initialisePair();
     }
 
     function getReserves() public view returns(uint reserveA, uint reserveB) {
         (reserveA, reserveB) = UniswapV2Library.getReserves(FACTORY, tokenA, tokenB);
+    }
+
+    function initialisePair() private {
+        factory = IUniswapV2Factory(FACTORY);
+        factory.createPair(tokenA, tokenB);
     }
 }
