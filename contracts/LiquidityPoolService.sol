@@ -16,6 +16,7 @@ contract LiquidityPoolService {
         tokenA = _tokenA;
         tokenB = _tokenB;
         factory = IUniswapV2Factory(FACTORY);
+        factory.createPair(tokenA, tokenB);
     }
 
     function getPair() public view returns(IUniswapV2Pair) {
@@ -23,6 +24,6 @@ contract LiquidityPoolService {
     }
 
     function getReserves() public view returns(uint reserveA, uint reserveB) {
-        return UniswapV2Library.getReserves(FACTORY, tokenA, tokenB);
+        (reserveA, reserveB) = UniswapV2Library.getReserves(FACTORY, tokenA, tokenB);
     }
 }
