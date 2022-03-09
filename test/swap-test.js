@@ -1,18 +1,21 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const Web3 = require('web3');
+const { utils } = require('web3');
+const { BN } = utils;
 
 describe('LiquidityPoolService', async () => {
-  let service, ewan, sheldon, owner;
+  const INITIAL_SUPPLY = 1000000000000000;
+  const ROUTER = "0xf164fC0Ec4E93095b804a4795bBe1e041497b92a";
+  let service, ewan, sheldon, liquidityProvider;
 
   before(async () => {
+    [ owner, liquidityProvider ] = await ethers.getSigners();
     const EwanToken = await ethers.getContractFactory("EwanToken");
     const SheldonToken = await ethers.getContractFactory("SheldonToken");
     const LiquidityPoolService = await ethers.getContractFactory("LiquidityPoolService");
-    ewan = await EwanToken.deploy("Ewan", "EWA");
-    sheldon = await SheldonToken.deploy("Sheldon", "EWA");
-    service = await LiquidityPoolService.deploy(ewan.address, sheldon.address);
-    [ provider ] = await ethers.getSigners();
+    ewan = await EwanToken.connect(owner).deploy("Ewan", "EWA", INITIAL_SUPPLY);
+    sheldon = await SheldonToken.connect(owner).deploy("Sheldon", "SHE", INITIAL_SUPPLY);
+    service = await LiquidityPoolService.connect(owner).deploy(ewan.address, sheldon.address);
     await ewan.deployed();
     await sheldon.deployed();
     await service.deployed();
@@ -47,8 +50,12 @@ describe('LiquidityPoolService', async () => {
     const minA = 50000;
     const minB = 50000;
     const nowPlusMinute = Math.floor(Date.now() / 1000);
-    await service.addLiquidity(
-      desiredA, desiredB, minA, minB, provider.address, nowPlusMinute
+    await ewan.connect(owner).transfer(liquidityProvider.address, desiredA);
+    await sheldon.connect(owner).transfer(liquidityProvider.address, desiredB);
+    await ewan.connect(liquidityProvider).approve(service.address, desiredA);
+    await sheldon.connect(liquidityProvider).approve(service.address, desiredB);
+    await service.connect(liquidityProvider).addLiquidity(
+      desiredA, desiredB, minA, minB, liquidityProvider.address, nowPlusMinute
     );
   });
 });
