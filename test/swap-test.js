@@ -4,18 +4,18 @@ const { ethers } = require('hardhat');
 describe('LiquidityPoolService', async () => {
   const INITIAL_SUPPLY = 1000000000000000;
   const ROUTER = "0xf164fC0Ec4E93095b804a4795bBe1e041497b92a";
-  let service, ewan, sheldon, liquidityProvider;
+  let service, seuro, tst, liquidityProvider;
 
   beforeEach(async () => {
     [ owner, liquidityProvider ] = await ethers.getSigners();
-    const EwanToken = await ethers.getContractFactory("EwanToken");
-    const SheldonToken = await ethers.getContractFactory("SheldonToken");
+    const SEuro = await ethers.getContractFactory("SEuro");
+    const StandardToken = await ethers.getContractFactory("StandardToken");
     const LiquidityPoolService = await ethers.getContractFactory("LiquidityPoolService");
-    ewan = await EwanToken.connect(owner).deploy("Ewan", "EWA", INITIAL_SUPPLY);
-    sheldon = await SheldonToken.connect(owner).deploy("Sheldon", "SHE", INITIAL_SUPPLY);
-    service = await LiquidityPoolService.connect(owner).deploy(ewan.address, sheldon.address);
-    await ewan.deployed();
-    await sheldon.deployed();
+    seuro = await SEuro.connect(owner).deploy("SEuro", "SEUR", INITIAL_SUPPLY);
+    tst = await StandardToken.connect(owner).deploy("Standard Token", "TST", INITIAL_SUPPLY);
+    service = await LiquidityPoolService.connect(owner).deploy(seuro.address, tst.address);
+    await seuro.deployed();
+    await tst.deployed();
     await service.deployed();
   });
 
@@ -29,14 +29,14 @@ describe('LiquidityPoolService', async () => {
   
     it('will not provide a quote when no liquidity', async () => {
       try {
-        await service.quote(ewan.address, 50000);
+        await service.quote(seuro.address, 50000);
         throw new Error();
       } catch (error) {
         expect(error.message).contains("INSUFFICIENT_LIQUIDITY");
       }
   
       try {
-        await service.quote(sheldon.address, 100000);
+        await service.quote(tst.address, 100000);
         throw new Error();
       } catch (error) {
         expect(error.message).contains("INSUFFICIENT_LIQUIDITY");
@@ -52,10 +52,10 @@ describe('LiquidityPoolService', async () => {
     const NOW_PLUS_MINUTE = Math.floor(Date.now() / 1000);
 
     beforeEach(async () => {
-      await ewan.connect(owner).transfer(liquidityProvider.address, DESIRED_A);
-      await sheldon.connect(owner).transfer(liquidityProvider.address, DESIRED_B);
-      await ewan.connect(liquidityProvider).approve(service.address, DESIRED_A);
-      await sheldon.connect(liquidityProvider).approve(service.address, DESIRED_B);
+      await seuro.connect(owner).transfer(liquidityProvider.address, DESIRED_A);
+      await tst.connect(owner).transfer(liquidityProvider.address, DESIRED_B);
+      await seuro.connect(liquidityProvider).approve(service.address, DESIRED_A);
+      await tst.connect(liquidityProvider).approve(service.address, DESIRED_B);
     });
 
     it('allows you to add liquidity', async () => {
@@ -74,11 +74,11 @@ describe('LiquidityPoolService', async () => {
       );
       const desiredSwapAmount = 10000;
 
-      const ewanPrice = await service.quote(ewan.address, desiredSwapAmount);
-      const sheldonPrice = await service.quote(sheldon.address, desiredSwapAmount);
+      const seuroPrice = await service.quote(seuro.address, desiredSwapAmount);
+      const tstPrice = await service.quote(tst.address, desiredSwapAmount);
 
-      expect(ewanPrice.toString()).to.equal(desiredSwapAmount.toString());
-      expect(sheldonPrice.toString()).to.equal(desiredSwapAmount.toString());
+      expect(seuroPrice.toString()).to.equal(desiredSwapAmount.toString());
+      expect(tstPrice.toString()).to.equal(desiredSwapAmount.toString());
     });
   });
 });
