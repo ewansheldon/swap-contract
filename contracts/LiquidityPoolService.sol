@@ -65,11 +65,26 @@ contract LiquidityPoolService {
             uint256 liquidity
         )
     {
-        IERC20(tokenA).transferFrom(msg.sender, address(this), _desiredA);
-        IERC20(tokenB).transferFrom(msg.sender, address(this), _desiredB);
-        IERC20(tokenA).approve(ROUTER, _desiredA);
-        IERC20(tokenB).approve(ROUTER, _desiredB);
+        IERC20 ercTokenA = IERC20(tokenA);
+        IERC20 ercTokenB = IERC20(tokenB);
+        ercTokenA.transferFrom(msg.sender, address(this), _desiredA);
+        ercTokenB.transferFrom(msg.sender, address(this), _desiredB);
+        ercTokenA.approve(ROUTER, _desiredA);
+        ercTokenB.approve(ROUTER, _desiredB);
         (amountA, amountB, liquidity) = router.addLiquidity(tokenA, tokenB, _desiredA, _desiredB, _minA, _minB, _provider, _deadline);
         emit LiquidityAdded(amountA, amountB, liquidity);
+    }
+
+    function removeLiquidity(
+        uint256 _amount,
+        uint256 _minAmountA,
+        uint256 _minAmountB,
+        address _to,
+        uint256 _deadline
+    ) public returns (uint256 amountA, uint256 amountB) {
+        IERC20 lpToken = IERC20(getPair());
+        lpToken.transferFrom(msg.sender, address(this), _amount);
+        lpToken.approve(ROUTER, _amount);
+        (amountA, amountB) = router.removeLiquidity(tokenA, tokenB, _amount, _minAmountA, _minAmountB, _to, _deadline);
     }
 }

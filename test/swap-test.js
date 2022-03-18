@@ -95,6 +95,9 @@ describe('LiquidityPoolService', async () => {
   });
 
   describe('liquidity pool tokens', async () => {
+    //
+    // write some tests about how many tokens are minted depending on reserves, ratios and liquidity added
+    //
     const DESIRED_A = 50000;
     const DESIRED_B = 50000;
     let liquidityPoolToken;
@@ -121,6 +124,44 @@ describe('LiquidityPoolService', async () => {
 
       expect((await liquidityPoolToken.balanceOf(liquidityProvider.address)).toString())
         .to.equal(lpTokensAmount);
+    });
+  });
+
+  describe('removing liquidity', async () => {
+    const DESIRED_A = 10000000000;
+    const DESIRED_B = 10000000000;
+    const MINIMUM_LIQUIDITY = 1000;
+    let liquidityPoolToken;
+
+    beforeEach(async () => {
+      const ERC20 = await ethers.getContractFactory("ERC20");
+      liquidityPoolToken = ERC20.attach(await liquidityPoolService.getPair());
+
+      await seuro.connect(owner).transfer(liquidityProvider.address, DESIRED_A);
+      await tst.connect(owner).transfer(liquidityProvider.address, DESIRED_B);
+      await seuro.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_A);
+      await tst.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_B);
+    });
+
+    it('will remove liquidity in exchange for pool tokens up to minimum liquidity', async () => {
+      const addLiquidity = await liquidityPoolService.connect(liquidityProvider).addLiquidity(
+        DESIRED_A, DESIRED_B, 1, 1, liquidityProvider.address, NOW_PLUS_MINUTE
+      );
+      const lpTokensAmount = (await addLiquidity.wait())
+        .events.filter(e => e.event == "LiquidityAdded")
+        .map(e => e.args.poolTokens)
+        [0];
+      liquidityPoolToken.connect(liquidityProvider).approve(liquidityPoolService.address, lpTokensAmount);
+
+      await liquidityPoolService.connect(liquidityProvider).removeLiquidity(
+        lpTokensAmount, 1, 1, liquidityProvider.address, NOW_PLUS_MINUTE
+      );
+
+      const { reserveA, reserveB } = await liquidityPoolService.getReserves();
+      expect((await liquidityPoolToken.balanceOf(liquidityProvider.address)).toString())
+        .to.equal("0");
+      expect(reserveA.toString()).to.equal(MINIMUM_LIQUIDITY.toString());
+      expect(reserveB.toString()).to.equal(MINIMUM_LIQUIDITY.toString());
     });
   });
 });
