@@ -94,29 +94,33 @@ describe('LiquidityPoolService', async () => {
     });
   });
 
-  // describe('liquidity pool tokens', async () => {
-  //   const DESIRED_A = 50000;
-  //   const DESIRED_B = 50000;
-  //   let liquidityPoolToken;
+  describe('liquidity pool tokens', async () => {
+    const DESIRED_A = 50000;
+    const DESIRED_B = 50000;
+    let liquidityPoolToken;
 
-  //   beforeEach(async () => {
-  //     const ERC20 = await ethers.getContractFactory("ERC20");
-  //     liquidityPoolToken = ERC20.attach(await liquidityPoolService.getPair())  
-  //     await seuro.connect(owner).transfer(liquidityProvider.address, DESIRED_A);
-  //     await tst.connect(owner).transfer(liquidityProvider.address, DESIRED_B);
-  //     await seuro.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_A);
-  //     await tst.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_B);
-  //   });
+    beforeEach(async () => {
+      const ERC20 = await ethers.getContractFactory("ERC20");
+      liquidityPoolToken = ERC20.attach(await liquidityPoolService.getPair());
+      await seuro.connect(owner).transfer(liquidityProvider.address, DESIRED_A);
+      await tst.connect(owner).transfer(liquidityProvider.address, DESIRED_B);
+      await seuro.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_A);
+      await tst.connect(liquidityProvider).approve(liquidityPoolService.address, DESIRED_B);
+    });
 
-  //   it('grants liquidity pool tokens to the provider', async () => {
-  //     expect((await liquidityPoolToken.balanceOf(liquidityProvider.address)).toString()).to.equal("0");
+    it('grants liquidity pool tokens to the provider', async () => {
+      expect((await liquidityPoolToken.balanceOf(liquidityProvider.address)).toString()).to.equal("0");
       
-  //     const addLiquidity = await liquidityPoolService.connect(liquidityProvider).callStatic.addLiquidity(
-  //       DESIRED_A, DESIRED_B, 1, 1, liquidityProvider.address, NOW_PLUS_MINUTE
-  //     );
-  //     const lpTokenAmount = addLiquidity.liquidity.toString();
+      const addLiquidity = await liquidityPoolService.connect(liquidityProvider).addLiquidity(
+        DESIRED_A, DESIRED_B, 1, 1, liquidityProvider.address, NOW_PLUS_MINUTE
+      );
+      const lpTokensAmount = (await addLiquidity.wait())
+        .events.filter(e => e.event == "LiquidityAdded")
+        .map(e => e.args.poolTokens.toString())
+        [0];
 
-  //     // expect((await service.balanceOf(liquidityProvider.address)).toString()).not.to.equal("0");
-  //   });
-  // });
+      expect((await liquidityPoolToken.balanceOf(liquidityProvider.address)).toString())
+        .to.equal(lpTokensAmount);
+    });
+  });
 });
