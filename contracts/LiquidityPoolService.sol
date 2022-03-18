@@ -34,6 +34,10 @@ contract LiquidityPoolService {
         router = IUniswapV2Router01(ROUTER);
     }
 
+    function getPair() public view returns (address pair) {
+        return factory.getPair(tokenA, tokenB);
+    }
+
     function getReserves() public view returns (uint256 reserveA, uint256 reserveB) {
         (reserveA, reserveB) = UniswapV2Library.getReserves(FACTORY, tokenA, tokenB);
     }
